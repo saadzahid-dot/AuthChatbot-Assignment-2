@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { db } from '$lib/server/db';
 import { users, sessions } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -39,6 +39,11 @@ export const actions: Actions = {
 		if (role === 'user' && user.role !== 'user') {
 			return fail(403, { error: 'This account is an admin account. Please use admin login.' });
 		}
+
+		// Clean up expired sessions for this user before creating a new one
+		await db.delete(sessions).where(
+			and(eq(sessions.userId, user.id), lt(sessions.expires, new Date()))
+		);
 
 		const sessionToken = crypto.randomUUID();
 		const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);

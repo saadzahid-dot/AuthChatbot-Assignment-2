@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { users, sessions } from '$lib/server/db/schema';
-import { eq, desc, count } from 'drizzle-orm';
+import { eq, desc, count, gt } from 'drizzle-orm';
 
 export const load: PageServerLoad = async () => {
 	const allUsers = await db
@@ -20,7 +20,11 @@ export const load: PageServerLoad = async () => {
 		.orderBy(desc(users.createdAt));
 
 	const [{ value: totalUsers }] = await db.select({ value: count() }).from(users);
-	const [{ value: totalSessions }] = await db.select({ value: count() }).from(sessions);
+	// Only count non-expired sessions
+	const [{ value: totalSessions }] = await db
+		.select({ value: count() })
+		.from(sessions)
+		.where(gt(sessions.expires, new Date()));
 
 	return {
 		users: allUsers.map((u) => ({

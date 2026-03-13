@@ -1,6 +1,6 @@
-# AuthApp - Full-Stack Authentication System
+# AuthApp - Full-Stack Authentication System with AI Chat
 
-A modern, production-ready authentication application built with **SvelteKit 5**, **Tailwind CSS**, **Drizzle ORM**, and **PostgreSQL**. Features a polished blue & orange themed UI with dark mode, role-based access control, and complete user management.
+A modern, production-ready authentication application built with **SvelteKit 5**, **Tailwind CSS**, **Drizzle ORM**, and **PostgreSQL**. Features a polished blue & orange themed UI with dark mode, role-based access control, complete user management, and an AI-powered chat interface using **Vercel AI SDK** with **Google Gemini**.
 
 ---
 
@@ -30,6 +30,19 @@ A modern, production-ready authentication application built with **SvelteKit 5**
 - Progress bars showing proportional metrics
 - **Secure admin registration** — public registration creates regular users only. Admins can only be created by existing admins.
 
+### AI Chat Interface
+- **Vercel AI SDK** with **Google Gemini** model
+- Real-time **streaming responses** for instant feedback
+- **Markdown rendering** — code blocks, tables, lists, and formatted text via `marked` and Tailwind Typography
+- **Prompt engineering** — system prompt ensures properly formatted responses with fenced code blocks, markdown tables, and structured output
+- **Reusable components** — `ChatMessage` and `ChatInput` components encapsulate chat logic
+- **Loading states** — animated typing indicator while AI is generating
+- **Error handling** — user-friendly error messages with dismiss capability
+- **Suggested prompts** — quick-start conversation starters on empty state
+- **Clear chat** — reset conversation with one click
+- **Protected route** — only authenticated users can access `/chat`
+- Auto-scrolling message area with scrollable input textarea
+
 ### UI/UX
 - **Blue & orange** color theme with dark mode support
 - Cream/warm white light mode, deep dark mode
@@ -48,10 +61,11 @@ A modern, production-ready authentication application built with **SvelteKit 5**
 |-------|-----------|
 | **Framework** | SvelteKit 5 (Svelte 5 runes) |
 | **Language** | TypeScript |
-| **Styling** | Tailwind CSS 3.4 |
+| **Styling** | Tailwind CSS 3.4 + Typography plugin |
 | **Database** | PostgreSQL |
 | **ORM** | Drizzle ORM |
 | **Auth** | Auth.js (@auth/sveltekit) |
+| **AI** | Vercel AI SDK + Google Gemini 2.0 Flash |
 | **Email** | Nodemailer (SMTP / Ethereal for dev) |
 | **Bundler** | Vite 5 |
 
@@ -67,6 +81,9 @@ src/
 ├── hooks.server.ts                  # Route protection middleware
 ├── lib/
 │   ├── theme.svelte.ts              # Dark mode state (Svelte 5 runes)
+│   ├── components/
+│   │   ├── ChatMessage.svelte       # Reusable chat message bubble
+│   │   └── ChatInput.svelte         # Reusable chat input with auto-resize
 │   └── server/
 │       ├── auth.ts                  # Auth.js config (providers, callbacks)
 │       ├── email.ts                 # Nodemailer email service
@@ -83,6 +100,8 @@ src/
     ├── dashboard/                   # User dashboard with stats
     ├── profile/                     # Profile settings (name, phone, bio, etc.)
     ├── admin/                       # Admin panel with user management
+    ├── chat/                        # AI chat interface (Gemini-powered)
+    ├── api/chat/                    # Streaming AI chat API endpoint
     ├── forgot-password/             # Password reset request
     ├── reset-password/              # Password reset form
     ├── verify-email/                # Email verification handler
@@ -123,18 +142,24 @@ src/
 ### Prerequisites
 - **Node.js** 18+
 - **PostgreSQL** database
+- **Google Gemini API key** (for AI chat)
 - Google and/or GitHub OAuth credentials (optional)
 
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/saadzahid-dot/Assignment-AuthApp.git
-
+git clone https://github.com/saadzahid-dot/AuthChatbot-Assignment-2.git
+cd AuthChatbot-Assignment-2
+npm install
+```
 
 ### 2. Environment Variables
 
-Create a `.env` file in the root:git clone https://github.com/saadzahid-dot/Assignment-AuthApp.git
-_URL="postgresql://user:password@localhost:5432/auth_app"
+Create a `.env` file in the root:
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/auth_app"
 
 # Auth.js
 AUTH_SECRET="your-random-secret-key"
@@ -150,7 +175,10 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
-EMAIL_FROM="AuthApp <noreply@authapp.com>"
+SMTP_FROM="AuthApp <noreply@authapp.com>"
+
+# Gemini AI (for chat feature)
+GOOGLE_GENERATIVE_AI_API_KEY="your-gemini-api-key"
 ```
 
 ### 3. Database Setup
@@ -220,6 +248,7 @@ Navigate to the `users` table, find your user, and change the `role` field to `a
 | `/verify-email` | Public |
 | `/dashboard` | Authenticated users only |
 | `/profile` | Authenticated users only |
+| `/chat` | Authenticated users only |
 | `/admin` | Admin role only |
 
 Route protection is enforced in `src/hooks.server.ts`. Unauthenticated users are redirected to `/login`, and non-admin users are blocked from `/admin`.
@@ -248,3 +277,4 @@ Route protection is enforced in `src/hooks.server.ts`. Unauthenticated users are
 - Route-level protection in **server hooks**
 - Token-based email verification and password reset
 - Input validation on all server actions
+- AI chat API endpoint independently verifies authentication

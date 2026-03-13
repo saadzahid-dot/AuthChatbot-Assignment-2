@@ -177,3 +177,74 @@ html {
 html.dark {
 	color-scheme: dark;
 }
+
+/* Chat prose table grid styling */
+.prose table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.875rem;
+	margin: 0.75rem 0;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	border: 1px solid #e5e7eb;
+}
+
+.dark .prose table {
+	border-color: #374151;
+}
+
+.prose thead th {
+	background: #f3f4f6;
+	font-weight: 600;
+	text-align: left;
+	padding: 0.625rem 0.75rem;
+	border: 1px solid #e5e7eb;
+	color: #374151;
+}
+
+.dark .prose thead th {
+	background: #1f2937;
+	border-color: #374151;
+	color: #d1d5db;
+}
+
+.prose tbody td {
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #e5e7eb;
+	color: #4b5563;
+}
+
+.dark .prose tbody td {
+	border-color: #374151;
+	color: #d1d5db;
+}
+
+.prose tbody tr:nth-child(even) {
+	background: #f9fafb;
+}
+
+.dark .prose tbody tr:nth-child(even) {
+	background: rgba(31, 41, 55, 0.5);
+}
+
+/* Chat clear animation - 180 flip */
+@keyframes chat-flip-clear {
+	0% {
+		opacity: 1;
+		transform: perspective(800px) rotateX(0deg);
+	}
+	100% {
+		opacity: 0;
+		transform: perspective(800px) rotateX(180deg) scale(0.9);
+	}
+}
+
+.chat-clearing {
+	perspective: 800px;
+}
+
+.chat-clearing > * {
+	animation: chat-flip-clear 0.4s ease-in forwards;
+	transform-origin: center center;
+}
+

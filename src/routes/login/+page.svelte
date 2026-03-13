@@ -137,10 +137,12 @@
 				</button>
 			</form>
 
-			<p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-				Don't have an account?
-				<a href="/register" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">Sign up</a>
-			</p>
+			{#if !isAdmin}
+				<p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+					Don't have an account?
+					<a href="/register" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">Sign up</a>
+				</p>
+			{/if}
 		</div>
 	</div>
 </div>
