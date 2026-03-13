@@ -35,7 +35,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 - Keep responses concise, well-structured, and easy to read.
 
 ## Code
-- Always wrap code in fenced code blocks with the language specified (e.g. \`\`\`python, \`\`\`javascript, \`\`\`sql).
+- EVERY code block MUST have a language identifier. This is a STRICT requirement with NO exceptions.
+- The opening fence MUST always be \`\`\`language — for example: \`\`\`python, \`\`\`javascript, \`\`\`java, \`\`\`cpp, \`\`\`c, \`\`\`html, \`\`\`css, \`\`\`sql, \`\`\`bash, \`\`\`typescript, \`\`\`rust, \`\`\`go, \`\`\`ruby, \`\`\`php, \`\`\`swift, \`\`\`kotlin, \`\`\`yaml, \`\`\`json, \`\`\`xml, \`\`\`markdown, etc.
+- NEVER write a bare \`\`\` without a language. If you are unsure of the language, use \`\`\`plaintext.
+- For shell/terminal commands, always use \`\`\`bash.
+- For configuration files, use the appropriate language: \`\`\`yaml, \`\`\`json, \`\`\`toml, \`\`\`ini, etc.
+- For output/logs with no specific language, use \`\`\`bash.
+- When the user asks for code in a specific language, write the code in that exact language.
 - Use inline \`code\` for short references like variable names, commands, or file paths.
 - Add brief comments in code when helpful.
 
