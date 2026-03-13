@@ -131,17 +131,41 @@ html {
 
 /* Glass card utility */
 .glass-card {
-	@apply bg-white dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200 dark:border-gray-700/50 shadow-sm;
+	background-color: #fff;
+	backdrop-filter: blur(24px);
+	border: 1px solid #e5e7eb;
+	box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.dark .glass-card {
+	background-color: rgba(31, 41, 55, 0.8);
+	border-color: rgba(55, 65, 81, 0.5);
 }
 
 /* Gradient text utility */
 .gradient-text {
-	@apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600 dark:from-blue-400 dark:via-orange-400 dark:to-blue-400;
+	background: linear-gradient(to right, #2563eb, #f59e42, #2563eb);
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+	-webkit-text-fill-color: transparent;
+}
+
+.dark .gradient-text {
+	background: linear-gradient(to right, #60a5fa, #fb923c, #60a5fa);
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+	-webkit-text-fill-color: transparent;
 }
 
 /* Stat card hover */
 .stat-card {
-	@apply relative overflow-hidden transition-all duration-300;
+	position: relative;
+	overflow: hidden;
+	transition-property: all;
+	transition-duration: 300ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover {
@@ -227,24 +251,94 @@ html.dark {
 	background: rgba(31, 41, 55, 0.5);
 }
 
-/* Chat clear animation - 180 flip */
+/* Chat clear animation - single card flip */
 @keyframes chat-flip-clear {
 	0% {
 		opacity: 1;
-		transform: perspective(800px) rotateX(0deg);
+		transform: perspective(1000px) rotateY(0deg) scale(1);
 	}
 	100% {
 		opacity: 0;
-		transform: perspective(800px) rotateX(180deg) scale(0.9);
+		transform: perspective(1000px) rotateY(180deg) scale(0.9);
 	}
 }
 
 .chat-clearing {
-	perspective: 800px;
-}
-
-.chat-clearing > * {
 	animation: chat-flip-clear 0.4s ease-in forwards;
 	transform-origin: center center;
+	backface-visibility: hidden;
+}
+
+/* Code block with language label */
+.code-block-wrapper {
+	border-radius: 0.75rem;
+	overflow: hidden;
+	margin: 0.75rem 0;
+	border: 1px solid #1e293b;
+}
+
+.code-block-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #1e293b;
+	padding: 0.4rem 0.875rem;
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: #94a3b8;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.code-block-wrapper pre {
+	margin: 0 !important;
+	border-radius: 0 !important;
+	border: none !important;
+	background: #0f172a !important;
+	padding: 1rem !important;
+	overflow-x: auto;
+}
+
+.code-block-wrapper pre code {
+	font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.8rem;
+	line-height: 1.6;
+	color: #e2e8f0 !important;
+	background: none !important;
+	padding: 0 !important;
+}
+
+/* Code block copy button */
+.code-copy-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.2rem 0.4rem;
+	border-radius: 0.3rem;
+	color: #64748b;
+	cursor: pointer;
+	border: none;
+	background: transparent;
+	transition: color 0.15s, background 0.15s;
+}
+
+.code-copy-btn:hover {
+	color: #e2e8f0;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+/* Inline code styling */
+.prose :not(pre) > code {
+	background: #f1f5f9;
+	color: #e05d44;
+	padding: 0.15rem 0.4rem;
+	border-radius: 0.3rem;
+	font-size: 0.8rem;
+	font-weight: 500;
+}
+
+.dark .prose :not(pre) > code {
+	background: #1e293b;
+	color: #fb923c;
 }
 
