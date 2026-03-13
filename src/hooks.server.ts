@@ -3,7 +3,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
 const protectedRoutes: Handle = async ({ event, resolve }) => {
-	const protectedPaths = ['/dashboard', '/profile'];
+	const protectedPaths = ['/dashboard', '/profile', '/chat'];
 	const adminPaths = ['/admin'];
 	const isProtected = protectedPaths.some((path) => event.url.pathname.startsWith(path));
 	const isAdmin = adminPaths.some((path) => event.url.pathname.startsWith(path));
