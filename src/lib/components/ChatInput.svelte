@@ -33,7 +33,7 @@
 
 <form
 	onsubmit={(e) => { e.preventDefault(); onsubmit(); }}
-	class="flex items-end gap-3"
+	class="flex gap-3"
 >
 	<div class="flex-1 relative">
 		<textarea

@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Email Verification - AuthApp</title>
+	<title>Email Verification - Passly</title>
 </svelte:head>
 
 <div class="animate-slide-up flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">

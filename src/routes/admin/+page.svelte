@@ -24,7 +24,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin Panel - AuthApp</title>
+	<title>Admin Panel - Passly</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -244,6 +244,15 @@
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-right">
 								<div class="flex items-center justify-end gap-3 opacity-70 group-hover:opacity-100 transition-opacity">
+									<form method="POST" action="?/toggleActive" use:enhance>
+										<input type="hidden" name="userId" value={user.id} />
+										<button
+											type="submit"
+											class="text-xs font-semibold px-3 py-2 rounded-lg border {user.active ? 'border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:border-amber-300 dark:hover:border-amber-700' : 'border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-300 dark:hover:border-green-700'} transition-all"
+										>
+											{user.active ? 'Disable' : 'Enable'}
+										</button>
+									</form>
 									<form method="POST" action="?/toggleRole" use:enhance>
 										<input type="hidden" name="userId" value={user.id} />
 										<button

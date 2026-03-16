@@ -44,9 +44,9 @@ export async function sendVerificationEmail(email: string, token: string, origin
 	const transporter = await getTransporter();
 
 	const info = await transporter.sendMail({
-		from: env.SMTP_FROM || 'AuthApp <noreply@authapp.com>',
+		from: env.SMTP_FROM || 'Passly <noreply@passly.com>',
 		to: email,
-		subject: 'Verify your email - AuthApp',
+		subject: 'Verify your email - Passly',
 		html: `
 			<div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
 				<h2 style="color: #1f2937; text-align: center;">Verify your email address</h2>
@@ -71,9 +71,9 @@ export async function sendPasswordResetEmail(email: string, resetLink: string) {
 	const transporter = await getTransporter();
 
 	const info = await transporter.sendMail({
-		from: env.SMTP_FROM || 'AuthApp <noreply@authapp.com>',
+		from: env.SMTP_FROM || 'Passly <noreply@passly.com>',
 		to: email,
-		subject: 'Reset your password - AuthApp',
+		subject: 'Reset your password - Passly',
 		html: `
 			<div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
 				<h2 style="color: #1f2937; text-align: center;">Reset your password</h2>

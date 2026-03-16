@@ -1,14 +1,20 @@
 <script lang="ts">
 	import { marked } from 'marked';
 
-	let { role, content, userName, userImage } = $props<{
+	let { role, content, userName, userImage, onedit, messageId, siblingCount, siblingIndex, onnavigate } = $props<{
 		role: 'user' | 'assistant';
 		content: string;
 		userName?: string | null;
 		userImage?: string | null;
+		onedit?: (messageId: string, content: string) => void;
+		messageId?: string;
+		siblingCount?: number;
+		siblingIndex?: number;
+		onnavigate?: (direction: 'prev' | 'next') => void;
 	}>();
 
 	const isUser = $derived(role === 'user');
+	const hasSiblings = $derived((siblingCount ?? 0) > 1 && isUser);
 	let copied = $state(false);
 
 	const langNames: Record<string, string> = {
@@ -102,20 +108,85 @@
 				</div>
 			{/if}
 		{:else}
-			<div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20 mt-0.5">
-				<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 00-.659 1.59v.06c0 .98-.627 1.85-1.559 2.16l-.38.127a4.072 4.072 0 01-3.864-.63l-.036-.027a1.493 1.493 0 00-1.765-.016l-.591.395A2.005 2.005 0 015 19.191V17.56a2.25 2.25 0 00-.659-1.591L2 13.5" />
+			<div class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-violet-500/20 mt-0.5">
+				<svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="8" width="18" height="12" rx="3" /><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none" /><path d="M12 2v4" /><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" />
 				</svg>
 			</div>
 		{/if}
 
 		<!-- Message bubble -->
 		{#if isUser}
-			<div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
-				<p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{content}</p>
+			<div class="group">
+				<div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+					<p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{content}</p>
+				</div>
+				<!-- Action buttons below the bubble -->
+				{#if content}
+					<div class="flex justify-end mt-1 {hasSiblings ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-all duration-200">
+						<div class="flex items-center gap-0.5">
+							<!-- Branch navigation arrows -->
+							{#if hasSiblings}
+								<button
+									onclick={() => onnavigate?.('prev')}
+									disabled={siblingIndex === 0}
+									class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed not-disabled:hover:scale-110 not-disabled:hover:bg-gray-50 dark:not-disabled:hover:bg-gray-700"
+									title="Previous version"
+								>
+									<svg class="w-3 h-3 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+									</svg>
+								</button>
+								<span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 select-none min-w-[2rem] text-center">
+									{(siblingIndex ?? 0) + 1}/{siblingCount}
+								</span>
+								<button
+									onclick={() => onnavigate?.('next')}
+									disabled={siblingIndex === (siblingCount ?? 1) - 1}
+									class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed not-disabled:hover:scale-110 not-disabled:hover:bg-gray-50 dark:not-disabled:hover:bg-gray-700"
+									title="Next version"
+								>
+									<svg class="w-3 h-3 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+									</svg>
+								</button>
+								<div class="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-0.5"></div>
+							{/if}
+							<!-- Copy button -->
+							<button
+								onclick={() => { navigator.clipboard.writeText(content); copied = true; setTimeout(() => copied = false, 2000); }}
+								class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-150"
+								title="Copy message"
+							>
+								{#if copied}
+									<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+									</svg>
+								{:else}
+									<svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2" />
+										<path stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+									</svg>
+								{/if}
+							</button>
+							<!-- Edit button -->
+							{#if onedit && messageId}
+								<button
+									onclick={() => onedit(messageId, content)}
+									class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-150"
+									title="Edit & resend"
+								>
+									<svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+									</svg>
+								</button>
+							{/if}
+						</div>
+					</div>
+				{/if}
 			</div>
 		{:else}
-			<div class="group relative">
+			<div class="group">
 				<div
 					class="rounded-2xl rounded-tl-sm text-gray-800 dark:text-gray-200 px-4 py-2.5 shadow-sm min-w-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
 					onclick={handleBubbleClick}
@@ -127,24 +198,24 @@
 				</div>
 				<!-- Copy entire response button -->
 				{#if content}
-					<button
-						onclick={copyAll}
-						class="absolute -bottom-3 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 shadow-sm"
-						title="Copy response"
-					>
-						{#if copied}
-							<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-							</svg>
-							<span class="text-green-500">Copied</span>
-						{:else}
-							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2" />
-								<path stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-							</svg>
-							<span>Copy</span>
-						{/if}
-					</button>
+					<div class="flex justify-start mt-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+						<button
+							onclick={copyAll}
+							class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-150"
+							title="Copy response"
+						>
+							{#if copied}
+								<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+								</svg>
+							{:else}
+								<svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2" />
+									<path stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+								</svg>
+							{/if}
+						</button>
+					</div>
 				{/if}
 			</div>
 		{/if}

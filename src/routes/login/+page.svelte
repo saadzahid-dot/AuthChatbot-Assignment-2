@@ -12,7 +12,7 @@
 </script>
 
 <svelte:head>
-	<title>{isAdmin ? 'Admin Sign In' : 'Sign In'} - AuthApp</title>
+	<title>{isAdmin ? 'Admin Sign In' : 'Sign In'} - Passly</title>
 </svelte:head>
 
 <div class="animate-slide-up flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
