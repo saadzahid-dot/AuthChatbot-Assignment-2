@@ -1,6 +1,6 @@
-# AuthApp - Full-Stack Authentication System with AI Chat
+# Passly - Full-Stack Authentication System with AI Chat
 
-A modern, production-ready authentication application built with **SvelteKit 5**, **Tailwind CSS**, **Drizzle ORM**, and **PostgreSQL**. Features a polished blue & orange themed UI with dark mode, role-based access control, complete user management, and an AI-powered chat interface using **Vercel AI SDK** with **Google Gemini**.
+A modern, production-ready authentication application built with **SvelteKit 5**, **Tailwind CSS**, **Drizzle ORM**, and **PostgreSQL**. Features a polished blue & orange themed UI with dark mode, role-based access control, complete user management, and **Pascal** — an AI-powered chat assistant using **Vercel AI SDK** with **Google Gemini**.
 
 ---
 
@@ -25,23 +25,27 @@ A modern, production-ready authentication application built with **SvelteKit 5**
 - Role-based access — only admins can access `/admin`
 - **User management** — view all users with search/filter
 - **Role toggling** — promote users to admin or demote (admins cannot modify their own role)
+- **Enable/Disable users** — toggle user active status from the admin panel
 - **User deletion** with cascade (sessions removed)
 - **Stats dashboard** — total users, active sessions, verified emails, admin count
 - Progress bars showing proportional metrics
 - **Secure admin registration** — public registration creates regular users only. Admins can only be created by existing admins.
 
-### AI Chat Interface
+### Pascal — AI Chat Assistant
 - **Vercel AI SDK** with **Google Gemini** model
 - Real-time **streaming responses** for instant feedback
+- **Personalized welcome** — greets users by name with suggested prompts
+- **Conversation branching** — edit and fork past messages without losing history, with left/right arrow navigation between branches
+- **Copy & Edit** buttons on user messages (icon-only, appear on hover)
 - **Markdown rendering** — code blocks, tables, lists, and formatted text via `marked` and Tailwind Typography
 - **Prompt engineering** — system prompt ensures properly formatted responses with fenced code blocks, markdown tables, and structured output
-- **Reusable components** — `ChatMessage` and `ChatInput` components encapsulate chat logic
+- **Reusable modules** — chat tree logic extracted to `src/lib/chat.ts`; `ChatMessage` and `ChatInput` components encapsulate UI
 - **Loading states** — animated typing indicator while AI is generating
 - **Error handling** — user-friendly error messages with dismiss capability
-- **Suggested prompts** — quick-start conversation starters on empty state
 - **Clear chat** — reset conversation with one click
 - **Protected route** — only authenticated users can access `/chat`
-- Auto-scrolling message area with scrollable input textarea
+- **Responsive** — expands to fill screen on larger devices
+- **Monogram** — "Passly: Secured by Pascal." displayed below the input area
 
 ### UI/UX
 - **Blue & orange** color theme with dark mode support
@@ -65,7 +69,7 @@ A modern, production-ready authentication application built with **SvelteKit 5**
 | **Database** | PostgreSQL |
 | **ORM** | Drizzle ORM |
 | **Auth** | Auth.js (@auth/sveltekit) |
-| **AI** | Vercel AI SDK + Google Gemini 2.0 Flash |
+| **AI** | Vercel AI SDK + Google Gemini 2.5 Flash |
 | **Email** | Nodemailer (SMTP / Ethereal for dev) |
 | **Bundler** | Vite 5 |
 
@@ -80,10 +84,11 @@ src/
 ├── app.d.ts                         # TypeScript declarations
 ├── hooks.server.ts                  # Route protection middleware
 ├── lib/
+│   ├── chat.ts                      # Chat tree logic (reusable module)
 │   ├── theme.svelte.ts              # Dark mode state (Svelte 5 runes)
 │   ├── components/
-│   │   ├── ChatMessage.svelte       # Reusable chat message bubble
-│   │   └── ChatInput.svelte         # Reusable chat input with auto-resize
+│   │   ├── ChatMessage.svelte       # Chat message bubble with branching UI
+│   │   └── ChatInput.svelte         # Chat input with auto-resize
 │   └── server/
 │       ├── auth.ts                  # Auth.js config (providers, callbacks)
 │       ├── email.ts                 # Nodemailer email service
@@ -100,7 +105,7 @@ src/
     ├── dashboard/                   # User dashboard with stats
     ├── profile/                     # Profile settings (name, phone, bio, etc.)
     ├── admin/                       # Admin panel with user management
-    ├── chat/                        # AI chat interface (Gemini-powered)
+    ├── chat/                        # Pascal AI chat interface
     ├── api/chat/                    # Streaming AI chat API endpoint
     ├── forgot-password/             # Password reset request
     ├── reset-password/              # Password reset form
@@ -127,6 +132,7 @@ src/
 | `phone` | text | Phone number |
 | `bio` | text | Short bio (max 300 chars) |
 | `location` | text | City/country |
+| `active` | boolean | Account enabled/disabled (default: `true`) |
 | `role` | text | `user` or `admin` (default: `user`) |
 | `created_at` | timestamp | Account creation date |
 
@@ -140,9 +146,9 @@ src/
 ## Getting Started
 
 ### Prerequisites
-- **Node.js** 18+
+- **Node.js** 18+ with **pnpm**
 - **PostgreSQL** database
-- **Google Gemini API key** (for AI chat)
+- **Google Gemini API key** (for Pascal AI chat)
 - Google and/or GitHub OAuth credentials (optional)
 
 ### 1. Clone and Install
@@ -150,7 +156,7 @@ src/
 ```bash
 git clone https://github.com/saadzahid-dot/AuthChatbot-Assignment-2.git
 cd AuthChatbot-Assignment-2
-npm install
+pnpm install
 ```
 
 ### 2. Environment Variables
@@ -159,7 +165,7 @@ Create a `.env` file in the root:
 
 ```env
 # Database
-DATABASE_URL="postgresql://user:password@localhost:5432/auth_app"
+DATABASE_URL="postgresql://user:password@localhost:5432/passly"
 
 # Auth.js
 AUTH_SECRET="your-random-secret-key"
@@ -170,35 +176,44 @@ AUTH_GOOGLE_SECRET="your-google-client-secret"
 AUTH_GITHUB_ID="your-github-client-id"
 AUTH_GITHUB_SECRET="your-github-client-secret"
 
-# Email (SMTP)
+# Email (SMTP) — leave empty for Ethereal dev previews
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
-SMTP_FROM="AuthApp <noreply@authapp.com>"
+SMTP_FROM="Passly <noreply@passly.com>"
 
-# Gemini AI (for chat feature)
+# Gemini AI (for Pascal chat)
 GOOGLE_GENERATIVE_AI_API_KEY="your-gemini-api-key"
 ```
+
+#### SMTP Setup Options
+
+| Provider | SMTP_HOST | SMTP_PORT | Notes |
+|----------|-----------|-----------|-------|
+| **Gmail** | `smtp.gmail.com` | `587` | Use an [App Password](https://myaccount.google.com/apppasswords) (requires 2FA) |
+| **Outlook** | `smtp-mail.outlook.com` | `587` | Use your account password |
+| **SendGrid** | `smtp.sendgrid.net` | `587` | `SMTP_USER=apikey`, `SMTP_PASS=your-api-key` |
+| **Dev (Ethereal)** | *(leave empty)* | — | Auto-creates a test inbox; preview URLs logged to console |
 
 ### 3. Database Setup
 
 ```bash
 # Push schema directly to database
-npm run db:push
+pnpm db:push
 
 # Or generate and run migrations
-npm run db:generate
-npm run db:migrate
+pnpm db:generate
+pnpm db:migrate
 
 # (Optional) Open Drizzle Studio GUI
-npm run db:studio
+pnpm db:studio
 ```
 
 ### 4. Run Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
@@ -206,8 +221,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ### 5. Build for Production
 
 ```bash
-npm run build
-npm run preview
+pnpm build
+pnpm preview
 ```
 
 ---
@@ -231,7 +246,7 @@ UPDATE users SET role = 'admin' WHERE email = 'your-email@example.com';
 ### Option 2: Via Drizzle Studio
 
 ```bash
-npm run db:studio
+pnpm db:studio
 ```
 
 Navigate to the `users` table, find your user, and change the `role` field to `admin`.
@@ -248,7 +263,7 @@ Navigate to the `users` table, find your user, and change the `role` field to `a
 | `/verify-email` | Public |
 | `/dashboard` | Authenticated users only |
 | `/profile` | Authenticated users only |
-| `/chat` | Authenticated users only |
+| `/chat` (Pascal) | Authenticated users only |
 | `/admin` | Admin role only |
 
 Route protection is enforced in `src/hooks.server.ts`. Unauthenticated users are redirected to `/login`, and non-admin users are blocked from `/admin`.
@@ -259,13 +274,13 @@ Route protection is enforced in `src/hooks.server.ts`. Unauthenticated users are
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build |
-| `npm run db:generate` | Generate Drizzle migration files |
-| `npm run db:migrate` | Run pending migrations |
-| `npm run db:push` | Push schema directly to database |
-| `npm run db:studio` | Open Drizzle Studio GUI |
+| `pnpm dev` | Start development server |
+| `pnpm build` | Production build |
+| `pnpm preview` | Preview production build |
+| `pnpm db:generate` | Generate Drizzle migration files |
+| `pnpm db:migrate` | Run pending migrations |
+| `pnpm db:push` | Push schema directly to database |
+| `pnpm db:studio` | Open Drizzle Studio GUI |
 
 ---
 
@@ -277,4 +292,4 @@ Route protection is enforced in `src/hooks.server.ts`. Unauthenticated users are
 - Route-level protection in **server hooks**
 - Token-based email verification and password reset
 - Input validation on all server actions
-- AI chat API endpoint independently verifies authentication
+- Pascal chat API endpoint independently verifies authentication

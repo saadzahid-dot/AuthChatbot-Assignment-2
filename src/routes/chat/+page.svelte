@@ -2,29 +2,44 @@
 	import type { PageData } from './$types';
 	import ChatMessage from '$lib/components/ChatMessage.svelte';
 	import ChatInput from '$lib/components/ChatInput.svelte';
+	import {
+		type ChatNode,
+		createRootNode,
+		createNode,
+		getDisplayPath,
+		getActivePath,
+		getActiveLeaf,
+		findNode,
+		findParent,
+		navigateSibling,
+		attachChild
+	} from '$lib/chat';
 
 	let { data } = $props<{ data: PageData }>();
 
-	type Message = { id: string; role: 'user' | 'assistant'; content: string };
-
-	let messages = $state<Message[]>([]);
+	let root = $state<ChatNode>(createRootNode());
 	let input = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 	let provider = $state<'openai' | 'gemini'>('gemini');
 	let isClearing = $state(false);
 	let chatContainer: HTMLDivElement;
+	let forkTargetId = $state<string | null>(null);
 
 	const user = $derived(data.session?.user);
+	const displayPath = $derived.by(() => getDisplayPath(root));
+	const hasMessages = $derived(displayPath.length > 0);
+
+	let shouldScrollToBottom = $state(true);
 
 	function scrollToBottom() {
-		if (chatContainer) {
+		if (chatContainer && shouldScrollToBottom) {
 			chatContainer.scrollTop = chatContainer.scrollHeight;
 		}
 	}
 
 	$effect(() => {
-		messages;
+		displayPath;
 		scrollToBottom();
 	});
 
@@ -32,42 +47,58 @@
 		isClearing = true;
 		error = null;
 		setTimeout(() => {
-			messages = [];
+			root = createRootNode();
+			forkTargetId = null;
 			isClearing = false;
 		}, 400);
+	}
+
+	function handleEditMessage(messageId: string, content: string) {
+		if (isLoading) return;
+		const parent = findParent(messageId, root);
+		if (parent) {
+			forkTargetId = parent.id;
+			input = content;
+		}
+	}
+
+	function handleNavigateSibling(nodeId: string, direction: 'prev' | 'next') {
+		shouldScrollToBottom = false;
+		navigateSibling(root, nodeId, direction);
 	}
 
 	async function handleSubmit() {
 		if (!input.trim() || isLoading) return;
 
-		const userMessage: Message = {
-			id: crypto.randomUUID(),
-			role: 'user',
-			content: input.trim()
-		};
+		// Determine where to attach the new message
+		let attachTo: ChatNode;
+		if (forkTargetId) {
+			attachTo = findNode(forkTargetId, root) || getActiveLeaf(root);
+			forkTargetId = null;
+		} else {
+			attachTo = getActiveLeaf(root);
+		}
 
-		messages = [...messages, userMessage];
+		const userNode = attachChild(attachTo, createNode('user', input.trim()));
+
 		input = '';
 		isLoading = true;
 		error = null;
+		shouldScrollToBottom = true;
 
-		const assistantMessage: Message = {
-			id: crypto.randomUUID(),
-			role: 'assistant',
-			content: ''
-		};
-		messages = [...messages, assistantMessage];
+		const assistantNodeData = createNode('assistant', '');
+		const assistantNode = attachChild(userNode, assistantNodeData);
 
 		try {
+			const path = getActivePath(root);
+			const history = path
+				.filter((n) => n.id !== assistantNode.id)
+				.map((n) => ({ role: n.role, content: n.content }));
+
 			const response = await fetch('/api/chat', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					provider,
-					messages: messages
-						.filter((m) => m.id !== assistantMessage.id)
-						.map(({ role, content }) => ({ role, content }))
-				})
+				body: JSON.stringify({ provider, messages: history })
 			});
 
 			if (!response.ok) {
@@ -84,15 +115,12 @@
 				if (done) break;
 
 				const chunk = decoder.decode(value, { stream: true });
-				messages = messages.map((m) =>
-					m.id === assistantMessage.id
-						? { ...m, content: m.content + chunk }
-						: m
-				);
+				assistantNode.content += chunk;
+				scrollToBottom();
 			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Something went wrong';
-			messages = messages.filter((m) => m.id !== assistantMessage.id);
+			userNode.children = userNode.children.filter((c) => c.id !== assistantNode.id);
 		} finally {
 			isLoading = false;
 		}
@@ -100,24 +128,23 @@
 </script>
 
 <svelte:head>
-	<title>AI Chat - AuthApp</title>
+	<title>Pascal - Passly</title>
 </svelte:head>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
 	<!-- Chat Container Card -->
-	<div class="glass-card rounded-2xl overflow-hidden flex flex-col h-[calc(100dvh-8rem)] animate-slide-up">
+	<div class="glass-card rounded-2xl overflow-hidden flex flex-col h-[calc(100dvh-7rem)] sm:h-[calc(100dvh-8rem)] animate-slide-up">
 		<!-- Chat Header -->
 		<div class="border-b border-gray-200 dark:border-gray-700/50 px-4 sm:px-5 py-3 flex items-center justify-between flex-shrink-0 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800/90">
 			<div class="flex items-center gap-3">
-				<div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
-					<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+				<div class="w-9 h-9 bg-gradient-to-br from-violet-600 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-violet-500/20">
+					<svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="3" y="8" width="18" height="12" rx="3" /><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none" /><path d="M12 2v4" /><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" /><path d="M1 14h2M21 14h2" />
 					</svg>
 				</div>
 				<div>
-					<h1 class="text-base font-bold text-gray-900 dark:text-white">AI Chat</h1>
-					<p class="text-xs text-gray-500 dark:text-gray-400">
-						{provider === 'openai' ? 'GPT-5 Mini' : 'Gemini 2.5 Flash'}
+					<h1 class="text-base font-bold text-gray-900 dark:text-white">Pascal</h1>
+					<p class="text-xs text-gray-500 dark:text-gray-400">By Passly
 					</p>
 				</div>
 			</div>
@@ -130,7 +157,7 @@
 					<option value="openai">GPT-5 Mini</option>
 					<option value="gemini">Gemini 2.5 Flash</option>
 				</select>
-				{#if messages.length > 0}
+				{#if hasMessages}
 					<button
 						onclick={clearChat}
 						class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-700 transition-all"
@@ -143,17 +170,23 @@
 
 		<!-- Messages Area -->
 		<div bind:this={chatContainer} class="flex-1 overflow-y-auto px-4 sm:px-5 py-5 space-y-5 bg-amber-50/30 dark:bg-gray-900/30 {isClearing ? 'chat-clearing' : ''}">
-			{#if messages.length === 0}
-				<!-- Empty State -->
+			{#if !hasMessages}
+				<!-- Welcome State -->
 				<div class="flex flex-col items-center justify-center h-full text-center">
-					<div class="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-orange-500/10 dark:from-blue-500/20 dark:to-orange-500/20 rounded-2xl flex items-center justify-center mb-5">
-						<svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+					<!-- Pascal avatar -->
+					<div class="w-20 h-20 bg-gradient-to-br from-violet-500 to-blue-600 rounded-2xl flex items-center justify-center mb-5 shadow-xl shadow-violet-500/20">
+						<svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+							<rect x="3" y="8" width="18" height="12" rx="3" /><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none" /><path d="M12 2v4" /><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" /><path d="M1 14h2M21 14h2" />
 						</svg>
 					</div>
-					<h2 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Start a Conversation</h2>
-					<p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6">
-						Ask me anything! I can help with questions, writing, coding, and more.
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+						Hey{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! I'm <span class="text-blue-600 dark:text-blue-400">Pascal</span>
+					</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-1">
+						Your AI assistant, powered by Passly. I'm here to help you with anything — ask me questions, brainstorm ideas, write code, or just have a conversation.
+					</p>
+					<p class="text-xs text-gray-400 dark:text-gray-500 mb-7">
+						Pick a topic below or type your own message to get started.
 					</p>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-md w-full">
 						<button
@@ -184,14 +217,14 @@
 				</div>
 			{/if}
 
-			{#each messages as message (message.id)}
-				{#if message.role === 'assistant' && message.content === '' && isLoading}
+			{#each displayPath as { node, siblingCount, siblingIndex } (node.id)}
+				{#if node.role === 'assistant' && node.content === '' && isLoading}
 					<!-- Typing indicator -->
 					<div class="flex justify-start animate-fade-in">
 						<div class="flex items-start gap-2.5 max-w-[75%]">
-							<div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20 mt-0.5">
-								<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 00-.659 1.59v.06c0 .98-.627 1.85-1.559 2.16l-.38.127a4.072 4.072 0 01-3.864-.63l-.036-.027a1.493 1.493 0 00-1.765-.016l-.591.395A2.005 2.005 0 015 19.191V17.56a2.25 2.25 0 00-.659-1.591L2 13.5" />
+							<div class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-violet-500/20 mt-0.5">
+								<svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+									<rect x="3" y="8" width="18" height="12" rx="3" /><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none" /><path d="M12 2v4" /><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" />
 								</svg>
 							</div>
 							<div class="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 border border-gray-100 dark:border-gray-700/50">
@@ -205,10 +238,15 @@
 					</div>
 				{:else}
 					<ChatMessage
-						role={message.role}
-						content={message.content}
+						role={node.role}
+						content={node.content}
 						userName={user?.name}
 						userImage={user?.image}
+						messageId={node.id}
+						onedit={handleEditMessage}
+						siblingCount={siblingCount}
+						siblingIndex={siblingIndex}
+						onnavigate={(dir) => handleNavigateSibling(node.id, dir)}
 					/>
 				{/if}
 			{/each}
@@ -236,8 +274,8 @@
 		<!-- Input Area -->
 		<div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800/90 px-4 sm:px-5 py-3">
 			<ChatInput bind:value={input} onsubmit={handleSubmit} disabled={isLoading} />
-			<p class="text-xs text-gray-400 dark:text-gray-500 text-center mt-1.5">
-				Press Enter to send, Shift+Enter for new line
+			<p class="text-[11px] text-gray-400 dark:text-gray-500 text-center mt-1.5">
+				<span class="font-semibold text-blue-500/70 dark:text-blue-400/70">Passly</span><span class="mx-1 text-gray-300 dark:text-gray-600">:</span><span>Secured by</span> <span class="font-semibold text-gray-500 dark:text-gray-400">Pascal.</span>
 			</p>
 		</div>
 	</div>

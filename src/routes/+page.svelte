@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>AuthApp - Secure Authentication</title>
+	<title>Passly - Secure Authentication</title>
 </svelte:head>
 
 <!-- Hero Section -->

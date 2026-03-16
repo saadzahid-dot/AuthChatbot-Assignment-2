@@ -31,6 +31,7 @@ CREATE TABLE "users" (
 	"phone" text,
 	"bio" text,
 	"location" text,
+	"active" boolean DEFAULT true NOT NULL,
 	"role" text DEFAULT 'user' NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	CONSTRAINT "users_email_unique" UNIQUE("email")

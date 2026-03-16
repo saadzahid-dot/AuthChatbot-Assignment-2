@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head>
-	<title>Forgot Password - AuthApp</title>
+	<title>Forgot Password - Passly</title>
 </svelte:head>
 
 <div class="animate-slide-up flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">

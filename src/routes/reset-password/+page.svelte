@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>Reset Password - AuthApp</title>
+	<title>Reset Password - Passly</title>
 </svelte:head>
 
 <div class="animate-slide-up flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">

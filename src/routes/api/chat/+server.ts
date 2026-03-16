@@ -1,34 +1,36 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createOpenAI } from '@ai-sdk/openai';
-import { streamText } from 'ai';
-import { env } from '$env/dynamic/private';
-import type { RequestHandler } from './$types';
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { streamText } from "ai";
+import { env } from "$env/dynamic/private";
+import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const session = await locals.auth();
-	if (!session?.user) {
-		return new Response('Unauthorized', { status: 401 });
-	}
+  const session = await locals.auth();
+  if (!session?.user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
-	const { messages, provider = 'gemini' } = await request.json();
+  const { messages, provider = "gemini" } = await request.json();
 
-	let model;
+  let model;
 
-	if (provider === 'gemini') {
-		const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY;
-		if (!apiKey) return new Response('Gemini API key not configured', { status: 503 });
-		const google = createGoogleGenerativeAI({ apiKey });
-		model = google('gemini-2.5-flash');
-	} else {
-		const apiKey = env.OPENAI_API_KEY;
-		if (!apiKey) return new Response('OpenAI API key not configured', { status: 503 });
-		const openai = createOpenAI({ apiKey });
-		model = openai('gpt-5-mini-2025-08-07');
-	}
+  if (provider === "gemini") {
+    const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey)
+      return new Response("Gemini API key not configured", { status: 503 });
+    const google = createGoogleGenerativeAI({ apiKey });
+    model = google("gemini-2.5-flash");
+  } else {
+    const apiKey = env.OPENAI_API_KEY;
+    if (!apiKey)
+      return new Response("OpenAI API key not configured", { status: 503 });
+    const openai = createOpenAI({ apiKey });
+    model = openai("gpt-5-mini-2025-08-07");
+  }
 
-	const result = streamText({
-		model,
-		system: `You are a helpful, friendly AI assistant. Follow these formatting rules strictly:
+  const result = streamText({
+    model,
+    system: `You are a helpful, friendly AI assistant. Follow these formatting rules strictly:
 
 ## Response Formatting
 - Use proper **Markdown** for all responses.
@@ -63,8 +65,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 ## General
 - Do not wrap entire responses in a code block.
 - Respond directly without unnecessary preamble.`,
-		messages
-	});
+    messages,
+  });
 
-	return result.toTextStreamResponse();
+  return result.toTextStreamResponse();
 };

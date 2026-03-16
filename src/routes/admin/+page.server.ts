@@ -56,6 +56,27 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
+	toggleActive: async ({ request, locals }) => {
+		const session = await locals.auth();
+		if (!session?.user?.id) return fail(401, { error: 'Not authenticated.' });
+
+		const formData = await request.formData();
+		const userId = formData.get('userId') as string;
+
+		if (!userId) return fail(400, { error: 'User ID is required.' });
+		if (userId === session.user.id) return fail(400, { error: 'You cannot disable yourself.' });
+
+		const user = await db.query.users.findFirst({
+			where: eq(users.id, userId)
+		});
+
+		if (!user) return fail(404, { error: 'User not found.' });
+
+		await db.update(users).set({ active: !user.active }).where(eq(users.id, userId));
+
+		return { success: true };
+	},
+
 	toggleRole: async ({ request, locals }) => {
 		const session = await locals.auth();
 		if (!session?.user?.id) return fail(401, { error: 'Not authenticated.' });
