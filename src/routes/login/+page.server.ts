@@ -31,6 +31,11 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid email or password.' });
 		}
 
+		// Check if account is disabled by admin
+		if (!user.active) {
+			return fail(403, { error: 'Your account has been disabled by an administrator. Please contact support.' });
+		}
+
 		// Check if the user has the correct role
 		if (role === 'admin' && user.role !== 'admin') {
 			return fail(403, { error: 'This account does not have admin access.' });

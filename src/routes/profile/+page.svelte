@@ -5,7 +5,6 @@
 	let { data, form } = $props<{ data: PageData; form: ActionData }>();
 	let profileLoading = $state(false);
 	let passwordLoading = $state(false);
-	let activeLoading = $state(false);
 	let newPassword = $state('');
 
 	let passwordChecks = $derived({
@@ -392,62 +391,38 @@
 		</form>
 	</div>
 
-	<!-- Account Status Toggle -->
+	<!-- Account Status (Read-Only) -->
 	<div class="animate-slide-up-delay-4 glass-card rounded-2xl shadow-sm p-6 sm:p-8 mb-6">
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-3">
-				<div class="w-10 h-10 {data.user?.active ? 'bg-green-100 dark:bg-green-900/40' : 'bg-gray-100 dark:bg-gray-700'} rounded-xl flex items-center justify-center transition-colors">
-					{#if data.user?.active}
-						<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-						</svg>
-					{:else}
-						<svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-						</svg>
-					{/if}
-				</div>
-				<div>
-					<h2 class="text-lg font-bold text-gray-900 dark:text-white">Account Status</h2>
-					<p class="text-xs text-gray-500 dark:text-gray-400">
-						{#if data.user?.active}
-							Your account is currently <span class="text-green-600 dark:text-green-400 font-semibold">active</span>
-						{:else}
-							Your account is currently <span class="text-gray-500 dark:text-gray-400 font-semibold">inactive</span>
-						{/if}
-					</p>
-				</div>
+		<div class="flex items-center gap-3">
+			<div class="w-10 h-10 {data.user?.active ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40'} rounded-xl flex items-center justify-center transition-colors">
+				{#if data.user?.active}
+					<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+					</svg>
+				{:else}
+					<svg class="w-5 h-5 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+					</svg>
+				{/if}
 			</div>
-			<form
-				method="POST"
-				action="?/toggleActive"
-				use:enhance={() => {
-					activeLoading = true;
-					return async ({ update }) => {
-						activeLoading = false;
-						await update();
-					};
-				}}
-			>
-				<button
-					type="submit"
-					disabled={activeLoading}
-					class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 {data.user?.active ? 'bg-green-500 focus:ring-green-500' : 'bg-gray-300 dark:bg-gray-600 focus:ring-gray-400'}"
-					aria-label="Toggle account status"
-				>
-					<span
-						class="inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform duration-300 {data.user?.active ? 'translate-x-6' : 'translate-x-1'}"
-					></span>
-				</button>
-			</form>
+			<div>
+				<h2 class="text-lg font-bold text-gray-900 dark:text-white">Account Status</h2>
+				<p class="text-xs text-gray-500 dark:text-gray-400">
+					{#if data.user?.active}
+						Your account is currently <span class="text-green-600 dark:text-green-400 font-semibold">active</span>
+					{:else}
+						Your account is currently <span class="text-red-500 dark:text-red-400 font-semibold">disabled</span>
+					{/if}
+				</p>
+			</div>
 		</div>
 		{#if !data.user?.active}
-			<div class="mt-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800 flex items-start gap-3">
-				<svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<div class="mt-4 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800 flex items-start gap-3">
+				<svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
 				</svg>
-				<p class="text-sm text-amber-700 dark:text-amber-300">
-					Your account is set to inactive. Other users and admins will see you as inactive. Toggle the switch to reactivate.
+				<p class="text-sm text-red-700 dark:text-red-300">
+					Your account has been disabled by an administrator. Please contact support to reactivate your account.
 				</p>
 			</div>
 		{/if}

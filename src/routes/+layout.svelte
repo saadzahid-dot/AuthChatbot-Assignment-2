@@ -54,8 +54,8 @@
 
 <div class="min-h-screen bg-amber-50/40 dark:bg-gray-950">
 	<nav class="sticky top-0 z-40 bg-gradient-to-r from-gray-900 via-blue-900 to-gray-900 dark:from-black dark:via-blue-950 dark:to-black shadow-lg">
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-			<div class="flex items-center justify-between h-16">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="grid grid-cols-[auto_1fr_auto] items-center h-16">
 				<!-- Left: Logo -->
 				<div class="flex items-center">
 					<a href="/" class="inline-flex items-center gap-2 text-xl font-bold text-white tracking-wide">
@@ -68,7 +68,7 @@
 				</div>
 
 				<!-- Center: Nav Links (always visible) -->
-				<div class="hidden sm:flex sm:space-x-1 absolute left-1/2 -translate-x-1/2">
+				<div class="hidden sm:flex sm:space-x-1 justify-center">
 					<a href="/" class="inline-flex items-center gap-1.5 text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />

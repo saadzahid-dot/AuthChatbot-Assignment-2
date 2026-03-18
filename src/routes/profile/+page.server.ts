@@ -39,6 +39,14 @@ export const actions: Actions = {
 			return fail(401, { error: 'Not authenticated.' });
 		}
 
+		// Check if account is active
+		const currentUser = await db.query.users.findFirst({
+			where: eq(users.id, session.user.id)
+		});
+		if (currentUser && !currentUser.active) {
+			return fail(403, { error: 'Your account has been disabled. You cannot update your profile.' });
+		}
+
 		const formData = await request.formData();
 		const firstName = (formData.get('firstName') as string)?.trim();
 		const lastName = (formData.get('lastName') as string)?.trim();
@@ -68,32 +76,18 @@ export const actions: Actions = {
 		return { profileSuccess: true };
 	},
 
-	toggleActive: async ({ locals }) => {
-		const session = await locals.auth();
-		if (!session?.user?.id) {
-			return fail(401, { error: 'Not authenticated.' });
-		}
-
-		const user = await db.query.users.findFirst({
-			where: eq(users.id, session.user.id)
-		});
-
-		if (!user) {
-			return fail(404, { error: 'User not found.' });
-		}
-
-		await db
-			.update(users)
-			.set({ active: !user.active })
-			.where(eq(users.id, session.user.id));
-
-		return { activeToggled: true, newStatus: !user.active };
-	},
-
 	changePassword: async ({ request, locals }) => {
 		const session = await locals.auth();
 		if (!session?.user?.id) {
 			return fail(401, { error: 'Not authenticated.' });
+		}
+
+		// Check if account is active
+		const activeUser = await db.query.users.findFirst({
+			where: eq(users.id, session.user.id)
+		});
+		if (activeUser && !activeUser.active) {
+			return fail(403, { passwordError: 'Your account has been disabled. You cannot change your password.' });
 		}
 
 		const formData = await request.formData();

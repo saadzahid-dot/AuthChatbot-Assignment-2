@@ -72,7 +72,13 @@ export const actions: Actions = {
 
 		if (!user) return fail(404, { error: 'User not found.' });
 
-		await db.update(users).set({ active: !user.active }).where(eq(users.id, userId));
+		const newActiveStatus = !user.active;
+		await db.update(users).set({ active: newActiveStatus }).where(eq(users.id, userId));
+
+		// If disabling the user, delete all their sessions to force logout
+		if (!newActiveStatus) {
+			await db.delete(sessions).where(eq(sessions.userId, userId));
+		}
 
 		return { success: true };
 	},

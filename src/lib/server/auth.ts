@@ -63,7 +63,16 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 			}
 			return session;
 		},
-		async signIn({ user, account }) {
+		async signIn({ user }) {
+			// Block disabled users from signing in (OAuth + Credentials)
+			if (user.id) {
+				const dbUser = await db.query.users.findFirst({
+					where: eq(users.id, user.id)
+				});
+				if (dbUser && !dbUser.active) {
+					return false;
+				}
+			}
 			return true;
 		},
 		async redirect({ url, baseUrl }) {

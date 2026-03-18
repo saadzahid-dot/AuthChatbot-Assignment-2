@@ -95,6 +95,12 @@
 					</div>
 				{/if}
 
+				{#if $page.url.searchParams.get('error') === 'account-disabled'}
+					<div class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm rounded-lg p-3 border border-red-200 dark:border-red-800">
+						Your account has been disabled by an administrator. Please contact support.
+					</div>
+				{/if}
+
 				{#if form?.error}
 					<div class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm rounded-lg p-3 border border-red-200 dark:border-red-800">
 						{form.error}
